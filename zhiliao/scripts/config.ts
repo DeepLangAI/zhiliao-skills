@@ -83,14 +83,24 @@ function ensureDir(dir: string): void {
 }
 
 export function loadConfig(): ZhiliaoConfig | null {
-  if (!fs.existsSync(CONFIG_FILE)) return null;
-  try {
-    const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf-8"));
-    if (!raw.apiKey) return null;
-    return { baseUrl: DEFAULT_BASE_URL, ...raw };
-  } catch {
-    return null;
+  // 优先级: 环境变量 > 配置文件
+  const envKey = process.env.ZHILIAO_API_KEY;
+  const envUrl = process.env.ZHILIAO_BASE_URL;
+
+  let fileConfig: Partial<ZhiliaoConfig> = {};
+  if (fs.existsSync(CONFIG_FILE)) {
+    try {
+      fileConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf-8"));
+    } catch { /* ignore */ }
   }
+
+  const apiKey = envKey || fileConfig.apiKey;
+  if (!apiKey) return null;
+
+  return {
+    apiKey,
+    baseUrl: envUrl || fileConfig.baseUrl || DEFAULT_BASE_URL,
+  };
 }
 
 export function saveConfig(config: ZhiliaoConfig): void {
@@ -101,8 +111,11 @@ export function saveConfig(config: ZhiliaoConfig): void {
 export function requireConfig(): ZhiliaoConfig {
   const config = loadConfig();
   if (!config) {
-    console.error("错误: 未配置 API Key。请先使用 --api-key 参数设置。");
-    console.error("示例: npx tsx create-topic.ts \"话题描述\" --api-key YOUR_API_KEY");
+    console.error("错误: 未配置 API Key。");
+    console.error("\n请通过以下任一方式配置：");
+    console.error("  1. 设置环境变量: export ZHILIAO_API_KEY=\"your-key\"");
+    console.error("  2. 命令行参数:   npx tsx create-topic.ts \"话题描述\" --api-key YOUR_KEY");
+    console.error("  3. OpenClaw 配置: 在 ~/.openclaw/openclaw.json 中设置 ZHILIAO_API_KEY");
     console.error("\n每个 API Key 可免费创建 3 个话题，更多话题需付费。");
     console.error("访问知了网站获取 API Key: https://zhiliao.deeplang.com");
     process.exit(1);
