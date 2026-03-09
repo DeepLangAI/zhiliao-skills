@@ -1,9 +1,8 @@
-import { loadConfig, loadTopics, loadArticlesCache, formatArticle, FREE_TOPIC_LIMIT } from "./config.js";
+import { loadTopics, loadArticlesCache, formatArticle, FREE_TOPIC_LIMIT } from "./config.js";
 
 function main() {
   const args = process.argv.slice(2);
   const topics = loadTopics();
-  const config = loadConfig();
 
   if (topics.length === 0) {
     console.log("*暂无话题。使用 create-topic.ts 创建一个。*");
@@ -40,8 +39,7 @@ function main() {
   }
 
   // List all topics
-  const quotaLabel = config.apiKey ? "付费用户 - 无限制" : `${topics.length}/${FREE_TOPIC_LIMIT} 免费额度`;
-  console.log(`# 我的话题 (${quotaLabel})\n`);
+  console.log(`# 我的话题 (已创建 ${topics.length} 个，免费额度 ${FREE_TOPIC_LIMIT} 个)\n`);
 
   for (const topic of topics) {
     console.log(`## ${topic.name}\n`);
@@ -58,8 +56,8 @@ function main() {
     console.log("");
   }
 
-  if (!config.apiKey && topics.length >= FREE_TOPIC_LIMIT) {
-    console.log(`---\n\n> **提示**：免费额度已用完。如需创建更多话题，请访问知了网站申请 API Key。`);
+  if (topics.length >= FREE_TOPIC_LIMIT) {
+    console.log(`---\n\n> **提示**：已超出免费额度（${FREE_TOPIC_LIMIT} 个话题）。超出部分需付费，请访问知了网站充值。`);
   }
 }
 

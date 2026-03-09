@@ -1,9 +1,11 @@
 import {
   loadConfig,
   saveConfig,
+  requireConfig,
   apiRequest,
   saveArticlesCache,
   formatArticle,
+  DEFAULT_BASE_URL,
   type ArticlesResponse,
   type Article,
 } from "./config.js";
@@ -44,15 +46,20 @@ async function main() {
     process.exit(1);
   }
 
-  const config = loadConfig();
   if (apiKey) {
-    config.apiKey = apiKey;
-    saveConfig(config);
+    saveConfig({
+      apiKey,
+      baseUrl: baseUrl || loadConfig()?.baseUrl || DEFAULT_BASE_URL,
+    });
+  } else if (baseUrl) {
+    const existing = loadConfig();
+    if (existing) {
+      existing.baseUrl = baseUrl;
+      saveConfig(existing);
+    }
   }
-  if (baseUrl) {
-    config.baseUrl = baseUrl;
-    saveConfig(config);
-  }
+
+  const config = requireConfig();
 
   try {
     const result = await apiRequest<ArticlesResponse>(

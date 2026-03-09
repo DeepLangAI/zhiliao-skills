@@ -1,5 +1,5 @@
 import {
-  loadConfig,
+  requireConfig,
   loadTopics,
   apiRequest,
   saveArticlesCache,
@@ -8,7 +8,7 @@ import {
 } from "./config.js";
 
 async function checkTopicArticles(topicId: string, topicName: string) {
-  const config = loadConfig();
+  const config = requireConfig();
 
   try {
     const result = await apiRequest<ArticlesResponse>(

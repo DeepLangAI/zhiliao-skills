@@ -4,6 +4,8 @@ import {
   addTopic,
   loadTopics,
   apiRequest,
+  requireConfig,
+  DEFAULT_BASE_URL,
   FREE_TOPIC_LIMIT,
   type TopicResponse,
 } from "./config.js";
@@ -13,11 +15,10 @@ async function main() {
 
   if (args.length === 0) {
     console.error("用法: npx tsx create-topic.ts <prompt> [--api-key KEY] [--base-url URL]");
-    console.error('示例: npx tsx create-topic.ts "帮我追踪黄金价格走势"');
+    console.error('示例: npx tsx create-topic.ts "帮我追踪黄金价格走势" --api-key YOUR_KEY');
     process.exit(1);
   }
 
-  // Parse arguments
   let prompt = "";
   let apiKey = "";
   let baseUrl = "";
@@ -37,29 +38,21 @@ async function main() {
     process.exit(1);
   }
 
-  // Load config
-  const config = loadConfig();
+  // Save API key if provided
   if (apiKey) {
-    config.apiKey = apiKey;
-    saveConfig(config);
-  }
-  if (baseUrl) {
-    config.baseUrl = baseUrl;
-    saveConfig(config);
+    saveConfig({
+      apiKey,
+      baseUrl: baseUrl || loadConfig()?.baseUrl || DEFAULT_BASE_URL,
+    });
+  } else if (baseUrl) {
+    const existing = loadConfig();
+    if (existing) {
+      existing.baseUrl = baseUrl;
+      saveConfig(existing);
+    }
   }
 
-  // Check free quota
-  const topics = loadTopics();
-  if (topics.length >= FREE_TOPIC_LIMIT && !config.apiKey) {
-    console.error(JSON.stringify({
-      success: false,
-      error: "FREE_QUOTA_EXCEEDED",
-      message: `已达到免费额度上限（${FREE_TOPIC_LIMIT} 个话题）。如需创建更多话题，请访问 zhiliao 网站申请 API Key，然后使用 --api-key 参数配置。`,
-      current_count: topics.length,
-      limit: FREE_TOPIC_LIMIT,
-    }, null, 2));
-    process.exit(1);
-  }
+  const config = requireConfig();
 
   console.error(`正在创建话题: "${prompt}"...`);
 
@@ -77,7 +70,6 @@ async function main() {
 
     const { topic_id, name, description, surface_url, categorys } = result.data;
 
-    // Save topic locally
     addTopic({
       topic_id,
       name,
@@ -87,18 +79,17 @@ async function main() {
       created_at: new Date().toISOString(),
     });
 
-    const newCount = loadTopics().length;
-    const remaining = config.apiKey ? "unlimited" : Math.max(0, FREE_TOPIC_LIMIT - newCount);
+    const topicCount = loadTopics().length;
 
     console.log(JSON.stringify({
       success: true,
       topic: { topic_id, name, description, surface_url, categorys },
-      quota: {
-        used: newCount,
-        remaining,
-        has_api_key: !!config.apiKey,
-      },
+      quota: { used: topicCount, free_limit: FREE_TOPIC_LIMIT },
     }, null, 2));
+
+    if (topicCount >= FREE_TOPIC_LIMIT) {
+      console.error(`\n提示: 已使用 ${topicCount} 个话题（免费额度 ${FREE_TOPIC_LIMIT} 个）。超出部分需付费，请访问知了网站充值。`);
+    }
   } catch (error) {
     console.error(`创建话题失败: ${error instanceof Error ? error.message : error}`);
     process.exit(1);

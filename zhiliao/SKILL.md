@@ -15,9 +15,21 @@ description: "知了 - AI 话题追踪与资讯聚合服务。适用场景：(1)
 cd <skill-path>/scripts && bash setup.sh
 ```
 
-**无需 API Key 即可开始使用**，每位用户免费创建 3 个话题。
+**使用前需要 API Key**。用户需前往知了网站 (https://zhiliao.deeplang.com) 获取 API Key。每个 API Key 可免费创建 3 个话题，超出后需付费。
 
 ## 工作流程
+
+### 0. 配置 API Key（首次使用必须）
+
+用户首次使用时，引导其提供 API Key。API Key 只需配置一次，会自动保存到 `~/.zhiliao/config.json`。
+
+配置方式：在任意命令中附带 `--api-key` 参数即可：
+
+```bash
+cd <skill-path>/scripts && npx tsx create-topic.ts "话题描述" --api-key 用户的KEY
+```
+
+如果用户没有 API Key，引导其访问 https://zhiliao.deeplang.com 注册并获取。
 
 ### 1. 创建话题（多轮对话引导）
 
@@ -35,13 +47,9 @@ cd <skill-path>/scripts && bash setup.sh
 5. **确认或迭代**：用户不满意则调整 prompt 重新创建
 
 **额度说明**：
-- 免费用户可创建 3 个话题，无需任何配置
-- 超过 3 个话题时，脚本会自动提示用户前往知了网站申请 API Key
-- 用户获取 API Key 后，通过 `--api-key` 配置：
-  ```bash
-  cd <skill-path>/scripts && npx tsx create-topic.ts "PROMPT" --api-key 用户的KEY
-  ```
-- API Key 会自动保存到 `~/.zhiliao/config.json`，后续无需重复输入
+- 每个 API Key 可免费创建 3 个话题
+- 超出 3 个话题后，服务端会返回错误，提示用户前往知了网站付费充值
+- API Key 首次配置后自动保存，后续无需重复输入
 
 ### 2. 获取文章
 
@@ -106,7 +114,7 @@ openclaw cron remove <jobId>    # 删除任务
 ## 数据存储
 
 所有数据保存在 `~/.zhiliao/` 目录：
-- `config.json` - API Key 和服务地址（可选）
+- `config.json` - API Key 和服务地址
 - `topics.json` - 已创建的话题列表
 - `articles/` - 各话题的文章缓存
 
@@ -116,6 +124,7 @@ openclaw cron remove <jobId>    # 删除任务
 
 ## 错误处理
 
-- **免费额度用完**：提示用户访问知了网站付费并申请 API Key
+- **未配置 API Key**：引导用户前往知了网站注册获取
+- **免费额度用完**：提示用户访问知了网站付费充值
 - **网络错误**：重试一次，失败后报告错误
 - **文章为空**：话题刚创建需要时间聚合，建议稍后再查

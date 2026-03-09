@@ -13,7 +13,7 @@ const DEFAULT_BASE_URL = "https://zhiliao.deeplang.com";
 export const FREE_TOPIC_LIMIT = 3;
 
 export interface ZhiliaoConfig {
-  apiKey?: string;
+  apiKey: string;
   baseUrl: string;
 }
 
@@ -82,19 +82,32 @@ function ensureDir(dir: string): void {
   }
 }
 
-export function loadConfig(): ZhiliaoConfig {
-  if (!fs.existsSync(CONFIG_FILE)) return { baseUrl: DEFAULT_BASE_URL };
+export function loadConfig(): ZhiliaoConfig | null {
+  if (!fs.existsSync(CONFIG_FILE)) return null;
   try {
     const raw = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf-8"));
+    if (!raw.apiKey) return null;
     return { baseUrl: DEFAULT_BASE_URL, ...raw };
   } catch {
-    return { baseUrl: DEFAULT_BASE_URL };
+    return null;
   }
 }
 
 export function saveConfig(config: ZhiliaoConfig): void {
   ensureDir(CONFIG_DIR);
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+
+export function requireConfig(): ZhiliaoConfig {
+  const config = loadConfig();
+  if (!config) {
+    console.error("错误: 未配置 API Key。请先使用 --api-key 参数设置。");
+    console.error("示例: npx tsx create-topic.ts \"话题描述\" --api-key YOUR_API_KEY");
+    console.error("\n每个 API Key 可免费创建 3 个话题，更多话题需付费。");
+    console.error("访问知了网站获取 API Key: https://zhiliao.deeplang.com");
+    process.exit(1);
+  }
+  return config;
 }
 
 export function loadTopics(): Topic[] {
@@ -154,10 +167,8 @@ export async function apiRequest<T>(
   const url = `${config.baseUrl}${endpoint}`;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "Authorization": `Bearer ${config.apiKey}`,
   };
-  if (config.apiKey) {
-    headers["Authorization"] = `Bearer ${config.apiKey}`;
-  }
   const resp = await fetch(url, {
     method: "POST",
     headers,
