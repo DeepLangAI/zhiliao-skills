@@ -254,6 +254,9 @@ export function formatArticle(article: Article, index: number): string {
       lines.push(`- [${src}](${meta.url})`);
     }
   }
+  if (article.content) {
+    lines.push("", "**正文：**", "", article.content);
+  }
   return lines.join("\n");
 }
 
