@@ -223,7 +223,8 @@ export async function apiRequest<T>(
     body: JSON.stringify(body),
   });
   if (!resp.ok) {
-    throw new Error(`API request failed: ${resp.status} ${resp.statusText}`);
+    const body = await resp.text().catch(() => "");
+    throw new Error(`API request failed: ${resp.status} ${resp.statusText}${body ? ` - ${body}` : ""}`);
   }
   return resp.json() as Promise<T>;
 }

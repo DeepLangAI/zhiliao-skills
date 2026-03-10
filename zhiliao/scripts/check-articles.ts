@@ -14,7 +14,7 @@ async function checkTopicArticles(topicId: string, topicName: string) {
     const result = await apiRequest<ArticlesResponse>(
       config,
       "/api/topic/v1/out/topic/article",
-      { topic_id: topicId, limit: 10 }
+      { topic_id: topicId, cursor: "", limit: 10 }
     );
 
     if (result.code !== 0) {
