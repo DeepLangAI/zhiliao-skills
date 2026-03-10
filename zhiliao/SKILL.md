@@ -18,7 +18,7 @@ cd <skill-path>/scripts && bash setup.sh
 
 ## 配置 API Key
 
-用户需前往知了网站 (https://zhiliao.deeplang.com) 注册获取 API Key。
+用户需前往知了网站 (https://zhiliao.news/) 注册，并在 API Key 申请页面 (https://open.zhiliao.news/) 获取 API Key。
 
 配置方式一 — 环境变量（推荐）：
 
@@ -82,22 +82,40 @@ cd <skill-path>/scripts && npx tsx list-topics.ts TOPIC_ID
 
 ### 4. 定时任务（OpenClaw Cron）
 
-使用 OpenClaw 原生 cron 调度定期检查所有话题的新文章。
+根据用户意图设置定时检查任务。常见场景：
 
-**注册定时任务**（每小时执行一次）：
+**每天早上8点日报**：
+```bash
+openclaw cron add --cron "0 8 * * *" --isolated --prompt "运行知了文章检查: cd <skill-path>/scripts && npx tsx check-articles.ts"
+```
 
+**每小时检查一次**：
 ```bash
 openclaw cron add --cron "0 * * * *" --isolated --prompt "运行知了文章检查: cd <skill-path>/scripts && npx tsx check-articles.ts"
 ```
 
-**手动触发一次检查**：
+**每30分钟检查一次**：
+```bash
+openclaw cron add --cron "*/30 * * * *" --isolated --prompt "运行知了文章检查: cd <skill-path>/scripts && npx tsx check-articles.ts"
+```
 
+**工作日早晚各一次（9:00 和 18:00）**：
+```bash
+openclaw cron add --cron "0 9,18 * * 1-5" --isolated --prompt "运行知了文章检查: cd <skill-path>/scripts && npx tsx check-articles.ts"
+```
+
+**Cron 表达式格式**：`分钟 小时 日 月 星期`
+- `0 8 * * *` - 每天8:00
+- `0 */2 * * *` - 每2小时
+- `*/15 * * * *` - 每15分钟
+- `0 9-17 * * 1-5` - 工作日9:00-17:00每小时
+
+**手动触发一次检查**：
 ```bash
 cd <skill-path>/scripts && npx tsx check-articles.ts
 ```
 
 **管理定时任务**：
-
 ```bash
 openclaw cron list              # 查看所有任务
 openclaw cron remove <jobId>    # 删除任务

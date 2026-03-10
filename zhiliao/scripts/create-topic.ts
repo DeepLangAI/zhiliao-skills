@@ -88,14 +88,25 @@ async function main() {
 
     const topicCount = loadTopics().length;
 
-    console.log(JSON.stringify({
-      success: true,
-      topic: { topic_id, name, description, surface_url, categorys },
-      quota: { used: topicCount, free_limit: FREE_TOPIC_LIMIT },
-    }, null, 2));
+    console.log(`# ✅ 话题创建成功\n`);
+    console.log(`## ${name}\n`);
+    console.log(`| 字段 | 值 |`);
+    console.log(`|------|------|`);
+    console.log(`| 话题 ID | \`${topic_id}\` |`);
+    console.log(`| 描述 | ${description} |`);
+    if (categorys && categorys.length > 0) {
+      console.log(`| 分类 | ${categorys.join(", ")} |`);
+    }
+    console.log(`| 已创建话题数 | ${topicCount} / ${FREE_TOPIC_LIMIT} (免费额度) |`);
+
+    if (surface_url) {
+      console.log(`\n![话题封面](${surface_url})`);
+    }
 
     if (topicCount >= FREE_TOPIC_LIMIT) {
-      console.error(`\n提示: 已使用 ${topicCount} 个话题（免费额度 ${FREE_TOPIC_LIMIT} 个）。超出部分需付费，请访问知了网站充值。`);
+      console.log(`\n---\n\n> ⚠️ **提示**: 已使用 ${topicCount} 个话题（免费额度 ${FREE_TOPIC_LIMIT} 个）。超出部分需付费，请访问 [知了网站](https://zhiliao.news/) 充值。`);
+    } else {
+      console.log(`\n---\n\n> 💡 使用 \`fetch-articles.ts ${topic_id}\` 获取文章，或设置定时任务自动检查更新。`);
     }
   } catch (error) {
     console.error(`创建话题失败: ${error instanceof Error ? error.message : error}`);

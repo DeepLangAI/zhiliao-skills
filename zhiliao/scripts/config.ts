@@ -119,7 +119,7 @@ export function requireConfig(): ZhiliaoConfig {
     console.error("  2. 命令行参数:   npx tsx create-topic.ts \"话题描述\" --api-key YOUR_KEY");
     console.error("  3. OpenClaw 配置: 在 ~/.openclaw/openclaw.json 中设置 ZHILIAO_API_KEY");
     console.error("\n每个 API Key 可免费创建 3 个话题，更多话题需付费。");
-    console.error("访问知了网站获取 API Key: https://zhiliao.deeplang.com");
+    console.error("访问知了网站获取 API Key: https://open.zhiliao.news/");
     process.exit(1);
   }
   return config;
@@ -217,7 +217,7 @@ export async function apiRequest<T>(
   if (options?.sessionId) {
     headers["X-Session-Id"] = options.sessionId;
   }
-  const resp = await fetch(url, {-
+  const resp = await fetch(url, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
@@ -230,8 +230,9 @@ export async function apiRequest<T>(
 
 export function formatArticle(article: Article, index: number): string {
   const date = new Date(article.pub_time * 1000).toLocaleString("zh-CN");
+  const articleUrl = article.url || (article.meta_data?.[0]?.url) || "#";
   const lines = [
-    `### ${index + 1}. [${article.title}](${article.url})`,
+    `### ${index + 1}. [${article.title}](${articleUrl})`,
     "",
     `> ${article.description || "暂无摘要"}`,
     "",

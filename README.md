@@ -36,8 +36,8 @@ clawdhub install zhiliao
 
 ### 获取 API Key
 
-1. 访问 [知了网站](https://zhiliao.deeplang.com)
-2. 注册账号
+1. 访问 [知了网站](https://zhiliao.news/)
+2. 注册账号并进入 [API Key 申请页面](https://open.zhiliao.news/)
 3. 获取 API Key
 
 ### 配置方式一：环境变量（推荐）
@@ -124,7 +124,7 @@ zhiliao/
 
 **症状**: 创建话题时服务端返回错误
 
-**解决**: 访问 [知了网站](https://zhiliao.deeplang.com) 付费充值。
+**解决**: 访问 [知了网站](https://zhiliao.news/) 付费充值。
 
 ### 文章为空
 
@@ -134,6 +134,7 @@ zhiliao/
 
 ## 相关链接
 
-- [知了网站](https://zhiliao.deeplang.com)
+- [知了网站](https://zhiliao.news/)
+- [API Key 申请](https://open.zhiliao.news/)
 - [OpenClaw 文档](https://docs.openclaw.ai)
 - [ClawdHub](https://clawdhub.com)
