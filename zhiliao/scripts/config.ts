@@ -10,7 +10,7 @@ const TOPICS_FILE = path.join(CONFIG_DIR, "topics.json");
 const ARTICLES_CACHE_DIR = path.join(CONFIG_DIR, "articles");
 const SESSION_DIR = path.join(CONFIG_DIR, "sessions");
 
-const DEFAULT_BASE_URL = "http://qa-api-public.zhiliao.news";
+const DEFAULT_BASE_URL = "http://api-public.zhiliao.news";
 
 export const FREE_TOPIC_LIMIT = 3;
 
@@ -217,7 +217,7 @@ export async function apiRequest<T>(
   if (options?.sessionId) {
     headers["X-Session-Id"] = options.sessionId;
   }
-  const resp = await fetch(url, {
+  const resp = await fetch(url, {-
     method: "POST",
     headers,
     body: JSON.stringify(body),
