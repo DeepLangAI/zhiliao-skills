@@ -4,6 +4,8 @@ import {
   addTopic,
   loadTopics,
   apiRequest,
+  loadSessionId,
+  deleteSessionId,
   requireConfig,
   DEFAULT_BASE_URL,
   FREE_TOPIC_LIMIT,
@@ -57,16 +59,21 @@ async function main() {
   console.error(`正在创建话题: "${prompt}"...`);
 
   try {
+    const sessionId = loadSessionId();
     const result = await apiRequest<TopicResponse>(
       config,
       "/api/topic/v1/out/topic/generate",
-      { prompt }
+      { prompt },
+      { sessionId }
     );
 
     if (result.code !== 0) {
       console.error(`API 错误: ${result.msg}`);
       process.exit(1);
     }
+
+    // 接口成功返回数据，删除 session_id，下次调用时重新生成
+    deleteSessionId();
 
     const { topic_id, name, description, surface_url, categorys } = result.data;
 

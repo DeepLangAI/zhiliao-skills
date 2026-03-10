@@ -1,14 +1,16 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import * as crypto from "crypto";
 
 // --- Config ---
 const CONFIG_DIR = path.join(os.homedir(), ".zhiliao");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 const TOPICS_FILE = path.join(CONFIG_DIR, "topics.json");
 const ARTICLES_CACHE_DIR = path.join(CONFIG_DIR, "articles");
+const SESSION_DIR = path.join(CONFIG_DIR, "sessions");
 
-const DEFAULT_BASE_URL = "https://zhiliao.deeplang.com";
+const DEFAULT_BASE_URL = "http://qa-api-public.zhiliao.news";
 
 export const FREE_TOPIC_LIMIT = 3;
 
@@ -172,16 +174,49 @@ export function loadArticlesCache(
   }
 }
 
+function getSessionScope(): string {
+  return process.env.ZHILIAO_SESSION || "default";
+}
+
+function getSessionFile(): string {
+  return path.join(SESSION_DIR, `${getSessionScope()}.json`);
+}
+
+export function loadSessionId(): string {
+  const sessionFile = getSessionFile();
+  if (fs.existsSync(sessionFile)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(sessionFile, "utf-8"));
+      if (data.sessionId) return data.sessionId;
+    } catch { /* ignore */ }
+  }
+  const sessionId = crypto.randomUUID();
+  ensureDir(SESSION_DIR);
+  fs.writeFileSync(sessionFile, JSON.stringify({ sessionId }, null, 2));
+  return sessionId;
+}
+
+export function deleteSessionId(): void {
+  const sessionFile = getSessionFile();
+  if (fs.existsSync(sessionFile)) {
+    fs.unlinkSync(sessionFile);
+  }
+}
+
 export async function apiRequest<T>(
   config: ZhiliaoConfig,
   endpoint: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  options?: { sessionId?: string }
 ): Promise<T> {
   const url = `${config.baseUrl}${endpoint}`;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${config.apiKey}`,
+    "Authorization": `${config.apiKey}`,
   };
+  if (options?.sessionId) {
+    headers["X-Session-Id"] = options.sessionId;
+  }
   const resp = await fetch(url, {
     method: "POST",
     headers,
