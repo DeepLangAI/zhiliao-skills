@@ -247,13 +247,6 @@ export function formatArticle(article: Article, index: number): string {
   if (article.content_length) {
     lines.push(`| 字数 | ${article.content_length} |`);
   }
-  if (article.meta_data && article.meta_data.length > 0) {
-    lines.push("", "**信息源：**", "");
-    for (const meta of article.meta_data) {
-      const src = meta.root_path_title || meta.url_title || "未知来源";
-      lines.push(`- [${src}](${meta.url})`);
-    }
-  }
   if (article.content) {
     lines.push("", "**正文：**", "", article.content);
   }
