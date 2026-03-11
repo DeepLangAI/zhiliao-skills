@@ -8,6 +8,7 @@ const CONFIG_DIR = path.join(os.homedir(), ".zhiliao");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 const TOPICS_FILE = path.join(CONFIG_DIR, "topics.json");
 const ARTICLES_CACHE_DIR = path.join(CONFIG_DIR, "articles");
+const ARTICLES_HTML_DIR = path.join(CONFIG_DIR, "articles_html");
 const SESSION_DIR = path.join(CONFIG_DIR, "sessions");
 
 const DEFAULT_BASE_URL = "http://api-public.zhiliao.news";
@@ -162,6 +163,21 @@ export function addTopic(topic: Topic): void {
   saveTopics(topics);
 }
 
+export function cleanupArticleHtml(maxFiles = 100): void {
+  if (!fs.existsSync(ARTICLES_HTML_DIR)) return;
+  const files = fs.readdirSync(ARTICLES_HTML_DIR)
+    .map((name) => ({
+      name,
+      path: path.join(ARTICLES_HTML_DIR, name),
+      mtime: fs.statSync(path.join(ARTICLES_HTML_DIR, name)).mtimeMs,
+    }))
+    .sort((a, b) => a.mtime - b.mtime);
+  const toDelete = files.slice(0, Math.max(0, files.length - maxFiles));
+  for (const file of toDelete) {
+    fs.unlinkSync(file.path);
+  }
+}
+
 export function saveArticlesCache(
   topicId: string,
   articles: Article[]
@@ -241,11 +257,92 @@ export async function apiRequest<T>(
   return resp.json() as Promise<T>;
 }
 
+export function generateArticleHtml(article: Article): string {
+  ensureDir(ARTICLES_HTML_DIR);
+  const htmlFile = path.join(ARTICLES_HTML_DIR, `${article.entry_id}.html`);
+
+  const htmlContent = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${article.title}</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    h1 {
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .meta {
+      color: #666;
+      font-size: 14px;
+      margin: 20px 0;
+    }
+    .description {
+      background: #f5f5f5;
+      padding: 15px;
+      border-left: 4px solid #007bff;
+      margin: 20px 0;
+    }
+    .content {
+      margin-top: 30px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .original-link {
+      margin-top: 30px;
+      padding: 15px;
+      background: #e7f3ff;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>${article.title}</h1>
+  <div class="meta">
+    发布时间: ${new Date(article.pub_time * 1000).toLocaleString("zh-CN")}
+    ${article.content_length ? ` | 字数: ${article.content_length}` : ""}
+  </div>
+  ${article.description ? `<div class="description">${article.description}</div>` : ""}
+  <div class="content" id="content"></div>
+  ${article.url || article.meta_data?.[0]?.url ? `
+  <div class="original-link">
+    <strong>原文链接：</strong>
+    <a href="${article.url || article.meta_data?.[0]?.url}" target="_blank">查看原文</a>
+  </div>` : ""}
+  <script>
+    const content = ${JSON.stringify(article.content || "")};
+    document.getElementById("content").innerHTML = marked.parse(content);
+  </script>
+</body>
+</html>`;
+
+  fs.writeFileSync(htmlFile, htmlContent, "utf-8");
+  return htmlFile;
+}
+
 export function formatArticle(article: Article, index: number): string {
   const date = new Date(article.pub_time * 1000).toLocaleString("zh-CN");
-  const articleUrl = article.url || (article.meta_data?.[0]?.url) || "#";
+  const htmlFile = generateArticleHtml(article);
   const lines = [
-    `### ${index + 1}. [${article.title}](${articleUrl})`,
+    `### ${index + 1}. [${article.title}](file://${htmlFile})`,
     "",
     `> ${article.description || "暂无摘要"}`,
     "",
@@ -259,10 +356,13 @@ export function formatArticle(article: Article, index: number): string {
   if (article.content_length) {
     lines.push(`| 字数 | ${article.content_length} |`);
   }
-  if (article.content) {
-    lines.push("", "**正文：**", "", article.content);
+  if (article.viewpoint && article.viewpoint.length > 0) {
+    lines.push("", "**核心观点：**", "");
+    for (const point of article.viewpoint) {
+      lines.push(`- ${point}`);
+    }
   }
   return lines.join("\n");
 }
 
-export { CONFIG_DIR, TOPICS_FILE, ARTICLES_CACHE_DIR, DEFAULT_BASE_URL };
+export { CONFIG_DIR, TOPICS_FILE, ARTICLES_CACHE_DIR, ARTICLES_HTML_DIR, DEFAULT_BASE_URL };

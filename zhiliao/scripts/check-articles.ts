@@ -4,6 +4,7 @@ import {
   apiRequest,
   saveArticlesCache,
   formatArticle,
+  cleanupArticleHtml,
   type ArticlesResponse,
 } from "./config.js";
 
@@ -45,6 +46,7 @@ async function checkTopicArticles(topicId: string, topicName: string) {
 }
 
 async function main() {
+  cleanupArticleHtml(100);
   const topics = loadTopics();
   if (topics.length === 0) {
     console.log("*暂无话题，请先创建一个话题。*");
