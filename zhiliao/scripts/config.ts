@@ -30,13 +30,17 @@ export interface Topic {
 
 export interface Article {
   entry_id: string;
+  entry_type: number;
+  feed_source: number;
   title: string;
-  url: string;
+  url?: string;
+  category?: string | null;
   pub_time: number;
   surface_url?: string;
   content?: string;
   description?: string;
   content_length?: number;
+  topic_id: string;
   meta_data?: Array<{
     url: string;
     url_title: string;
@@ -46,8 +50,16 @@ export interface Article {
     source?: number;
     root_path_title?: string;
     entry_id?: string;
+    info_source_id?: string;
+    shielded?: boolean;
+    info_source_root?: string;
   }>;
   like_count?: number;
+  article_type: number;
+  cropped_surface_url?: string;
+  cropped_width?: number;
+  cropped_height?: number;
+  viewpoint?: string[];
   user_has_like?: boolean;
 }
 
