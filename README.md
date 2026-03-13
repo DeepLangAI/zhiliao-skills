@@ -81,7 +81,7 @@ echo '{"apiKey":"your-api-key-here"}' > ~/.zhiliao/config.json
 
 ## 命令行工具
 
-所有命令位于 `zhiliao/command/` 目录：
+所有命令位于 `command/` 目录：
 
 | 命令 | 功能 | 用法 |
 |------|------|------|
@@ -93,7 +93,7 @@ echo '{"apiKey":"your-api-key-here"}' > ~/.zhiliao/config.json
 示例：
 
 ```bash
-cd ~/.openclaw/workspace/skills/zhiliao/command
+cd ~/.openclaw/workspace/skills/zhiliao-skills/command
 
 # 创建话题
 ./create-topic "追踪 AI 大模型技术进展"
@@ -118,7 +118,7 @@ cd ~/.openclaw/workspace/skills/zhiliao/command
 ## 项目结构
 
 ```
-zhiliao/
+zhiliao-skills/
 ├── SKILL.md               # OpenClaw Skill 定义文件
 ├── README.md              # 说明文档
 └── command/               # CLI 命令工具
