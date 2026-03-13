@@ -1,0 +1,78 @@
+#!/bin/bash
+# 创建知了话题
+# 用法: ./create-topic "话题描述" [SCOPE]
+
+set -e
+
+PROMPT="$1"
+SCOPE="${2:-$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | head -c 6)}"
+
+if [ -z "$PROMPT" ]; then
+  echo "错误: 请提供话题描述"
+  echo "用法: $0 \"话题描述\" [SCOPE]"
+  exit 1
+fi
+
+# 加载配置
+ZHILIAO_API_KEY="${ZHILIAO_API_KEY:-$(cat ~/.zhiliao/config.json 2>/dev/null | jq -r '.apiKey // empty')}"
+BASE_URL="${ZHILIAO_BASE_URL:-$(cat ~/.zhiliao/config.json 2>/dev/null | jq -r '.baseUrl // "http://api-public.zhiliao.news"')}"
+BASE_URL="${BASE_URL:-http://api-public.zhiliao.news}"
+
+if [ -z "$ZHILIAO_API_KEY" ]; then
+  echo "错误: 未配置 API Key"
+  echo "请设置环境变量: export ZHILIAO_API_KEY=\"your-key\""
+  echo "或创建配置文件: ~/.zhiliao/config.json"
+  exit 1
+fi
+
+# 获取或创建 session_id
+mkdir -p ~/.zhiliao/sessions
+SESSION_FILE=~/.zhiliao/sessions/${SCOPE}.json
+if [ -f "$SESSION_FILE" ]; then
+  SESSION_ID=$(cat "$SESSION_FILE" | jq -r '.sessionId')
+else
+  SESSION_ID=$(uuidgen 2>/dev/null || openssl rand -hex 16)
+  echo "{\"sessionId\":\"$SESSION_ID\"}" > "$SESSION_FILE"
+fi
+
+# 调用 API
+TEMP_RESULT=$(mktemp)
+curl -s -X POST "$BASE_URL/api/topic/v1/out/topic/generate" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: $ZHILIAO_API_KEY" \
+  -H "X-Session-Id: $SESSION_ID" \
+  -d "{\"prompt\": \"$PROMPT\"}" \
+  | iconv -c -t UTF-8 > "$TEMP_RESULT"
+
+# 展示结果
+cat "$TEMP_RESULT" | jq -r '
+  if .code == 0 then
+    "✅ 话题创建成功",
+    "",
+    "名称: \(.data.name)",
+    "ID: \(.data.topic_id)",
+    "描述: \(.data.description)",
+    (if .data.surface_url then "封面: \(.data.surface_url)" else empty end)
+  else
+    "❌ 创建失败: \(.msg)"
+  end
+'
+
+# 保存话题（如果成功）
+CODE=$(cat "$TEMP_RESULT" | jq -r '.code')
+if [ "$CODE" = "0" ]; then
+  mkdir -p ~/.zhiliao
+  TOPICS_FILE=~/.zhiliao/topics.json
+  [ ! -f "$TOPICS_FILE" ] && echo "[]" > "$TOPICS_FILE"
+
+  NEW_TOPIC=$(cat "$TEMP_RESULT" | jq '.data + {"created_at": (now | strftime("%Y-%m-%dT%H:%M:%SZ"))}')
+  cat "$TOPICS_FILE" | jq --argjson t "$NEW_TOPIC" \
+    '[.[] | select(.topic_id == $t.topic_id | not)] + [$t]' \
+    > /tmp/zhiliao_topics.json && mv /tmp/zhiliao_topics.json "$TOPICS_FILE"
+
+  rm -f "$SESSION_FILE"
+  echo ""
+  echo "已保存（共 $(cat "$TOPICS_FILE" | jq 'length') 个话题）"
+fi
+
+rm -f "$TEMP_RESULT"

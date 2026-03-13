@@ -1,0 +1,65 @@
+#!/bin/bash
+# 查看话题列表
+# 用法: ./list-topics [TOPIC_ID]
+
+TOPIC_ID="$1"
+TOPICS_FILE=~/.zhiliao/topics.json
+
+if [ ! -f "$TOPICS_FILE" ]; then
+  echo "暂无话题，请先创建一个话题。"
+  exit 0
+fi
+
+if [ -n "$TOPIC_ID" ]; then
+  # 查看单个话题详情
+  cat "$TOPICS_FILE" | jq -r --arg id "$TOPIC_ID" '
+    .[] | select(.topic_id == $id) |
+    "# \(.name)\n",
+    "| 字段 | 值 |",
+    "|------|------|",
+    "| ID | `\(.topic_id)` |",
+    "| 描述 | \(.description) |",
+    "| 创建时间 | \(.created_at // "") |"
+  '
+
+  # 显示缓存文章
+  CACHE_FILE=~/.zhiliao/articles/${TOPIC_ID}.json
+  if [ -f "$CACHE_FILE" ]; then
+    echo ""
+    cat "$CACHE_FILE" | jq -r '
+      "## 缓存文章（更新于 \(.updated_at)）\n",
+      (.articles[] | "- \(.title)")
+    '
+  fi
+else
+  # 列出所有话题
+  TOPIC_COUNT=$(cat "$TOPICS_FILE" | jq 'length')
+  if [ "$TOPIC_COUNT" = "0" ]; then
+    echo "暂无话题，请先创建一个话题。"
+    exit 0
+  fi
+
+  cat "$TOPICS_FILE" | jq -r '
+    "# 我的话题（共 \(length) 个，免费额度 3 个）\n",
+    (.[] |
+      "## \(.name)\n",
+      "| 字段 | 值 |",
+      "|------|------|",
+      "| ID | `\(.topic_id)` |",
+      "| 描述 | \(.description) |",
+      "| 创建时间 | \(.created_at // "") |",
+      ""
+    )
+  '
+
+  # 显示缓存状态
+  cat "$TOPICS_FILE" | jq -r '.[].topic_id' | while read -r tid; do
+    CACHE_FILE=~/.zhiliao/articles/${tid}.json
+    if [ -f "$CACHE_FILE" ]; then
+      CACHE_COUNT=$(cat "$CACHE_FILE" | jq '.articles | length')
+      CACHE_TIME=$(cat "$CACHE_FILE" | jq -r '.updated_at')
+      TOPIC_NAME=$(cat "$TOPICS_FILE" | jq -r --arg id "$tid" '.[] | select(.topic_id == $id) | .name')
+      echo "  📦 $TOPIC_NAME: $CACHE_COUNT 篇缓存（$CACHE_TIME）"
+    fi
+  done
+fi
