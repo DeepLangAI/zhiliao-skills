@@ -5,6 +5,8 @@
 ## 功能特点
 
 - **自然语言创建话题** - 描述你想追踪的信息，AI 自动生成精准话题
+- **智能话题推荐** - 创建前预览相关已有话题，避免重复创建
+- **两步式创建** - 先预览再确认，支持创建新话题或关注已有话题
 - **全网文章聚合** - 自动抓取和聚合话题相关的文章
 - **定时任务** - 通过 OpenClaw Cron 定时检查新文章
 - **Markdown 输出** - 所有结果以 Markdown 格式展示
@@ -85,7 +87,9 @@ echo '{"apiKey":"your-api-key-here"}' > ~/.zhiliao/config.json
 
 | 命令 | 功能 | 用法 |
 |------|------|------|
-| `create-topic` | 创建话题 | `./create-topic "描述" [SCOPE]` |
+| `create-topic` | 预览话题 | `./create-topic "描述" [SCOPE]` |
+| `create-topic` | 预览并自动创建 | `./create-topic "描述" [SCOPE] --auto-create` |
+| `create-topic` | 确认创建/关注 | `./create-topic --confirm --session-id ID --action create\|subscribe [--topic-id ID]` |
 | `fetch-articles` | 获取文章 | `./fetch-articles TOPIC_ID [LIMIT] [CURSOR]` |
 | `list-topics` | 查看话题列表 | `./list-topics [TOPIC_ID]` |
 | `check-articles` | 检查所有话题更新 | `./check-articles` |
@@ -95,8 +99,17 @@ echo '{"apiKey":"your-api-key-here"}' > ~/.zhiliao/config.json
 ```bash
 cd ~/.openclaw/workspace/skills/zhiliao-skills/command
 
-# 创建话题
+# Step 1: 预览话题（返回 JSON 含 session_id、待创建话题、相关话题）
 ./create-topic "追踪 AI 大模型技术进展"
+
+# Step 2a: 确认创建新话题
+./create-topic --confirm --session-id "SESSION_ID" --action create
+
+# Step 2b: 或关注已有话题
+./create-topic --confirm --session-id "SESSION_ID" --action subscribe --topic-id "TOPIC_ID"
+
+# 一步到位：预览并自动创建
+./create-topic "追踪 AI 大模型技术进展" --auto-create
 
 # 查看话题列表
 ./list-topics
@@ -122,7 +135,7 @@ zhiliao-skills/
 ├── SKILL.md               # OpenClaw Skill 定义文件
 ├── README.md              # 说明文档
 └── command/               # CLI 命令工具
-    ├── create-topic       # 创建话题
+    ├── create-topic       # 创建话题（两步式：预览 + 确认）
     ├── fetch-articles     # 获取文章
     ├── list-topics        # 查看话题列表
     └── check-articles     # 检查所有话题更新

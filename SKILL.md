@@ -37,17 +37,22 @@ echo '{"apiKey":"your-api-key-here","baseUrl":"http://api-public.zhiliao.news"}'
 
 ## 工作流程
 
-### 1. 创建话题（多轮对话引导）
+### 1. 创建话题（两步式：预览 + 确认）
 
-通过对话帮助用户创建精准的追踪话题：
+采用「预览 → 用户选择 → 确认」的两步式流程创建话题：
 
 1. **了解需求**：询问用户想追踪什么信息
 2. **优化 prompt**：帮助用户细化描述，使话题更精准：
    - 模糊: "科技新闻" → 优化: "AI大模型技术进展，包括OpenAI、Google、Anthropic等公司的最新发布和研究突破"
    - 模糊: "股市" → 优化: "A股半导体板块行情分析，包括主要芯片公司股价走势和产业政策影响"
-3. **调用创建命令**
-4. **展示结果**：向用户展示生成的话题名称、描述和封面图
-5. **确认或迭代**：用户不满意则调整 prompt 重新创建
+3. **调用预览命令**：获取待创建话题的预览和相关已有话题列表
+4. **展示预览结果**：向用户展示：
+   - 待创建的话题（名称、描述、封面图）
+   - 相关的已有话题列表（可直接关注，无需重复创建）
+5. **用户选择**：
+   - 创建新话题 → 调用确认命令 `--action create`
+   - 关注已有话题 → 调用确认命令 `--action subscribe --topic-id xxx`
+   - 不满意 → 调整 prompt 重新预览
 
 **会话隔离**：每次对话开始时生成一个独立的 `SCOPE`（6位随机字符串），在本次对话中所有创建话题操作复用同一个 `SCOPE`。
 
@@ -55,15 +60,27 @@ echo '{"apiKey":"your-api-key-here","baseUrl":"http://api-public.zhiliao.news"}'
 # 对话开始时生成 SCOPE（后续复用）
 SCOPE=$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | head -c 6)
 
-# 调用创建话题命令
+# Step 1: 预览话题（返回 JSON，包含 session_id、created_topic、related_topics）
 <skill-path>/command/create-topic "优化后的PROMPT" "$SCOPE"
+
+# Step 2a: 确认创建新话题
+<skill-path>/command/create-topic --confirm --session-id "SESSION_ID" --action create
+
+# Step 2b: 或关注已有话题
+<skill-path>/command/create-topic --confirm --session-id "SESSION_ID" --action subscribe --topic-id "TOPIC_ID"
+```
+
+也可以使用 `--auto-create` 跳过预览直接创建：
+
+```bash
+<skill-path>/command/create-topic "优化后的PROMPT" "$SCOPE" --auto-create
 ```
 
 命令会自动处理：
 - Session ID 的创建和管理
-- API 调用和响应解析
+- `/generate` API 调用获取预览
+- `/confirm` API 调用执行创建或关注
 - 话题数据的本地保存
-- 成功后删除 session 文件
 
 ### 2. 获取话题文章
 
@@ -153,7 +170,9 @@ openclaw cron remove <jobId>    # 删除任务
 
 | 命令 | 功能 | 用法 |
 |------|------|------|
-| `create-topic` | 创建话题 | `./create-topic "描述" [SCOPE]` |
+| `create-topic` | 预览话题 | `./create-topic "描述" [SCOPE]` |
+| `create-topic` | 预览并自动创建 | `./create-topic "描述" [SCOPE] --auto-create` |
+| `create-topic` | 确认创建/关注 | `./create-topic --confirm --session-id ID --action create\|subscribe [--topic-id ID]` |
 | `fetch-articles` | 获取文章 | `./fetch-articles TOPIC_ID [LIMIT] [CURSOR]` |
 | `list-topics` | 查看话题列表 | `./list-topics [TOPIC_ID]` |
 | `check-articles` | 检查所有话题更新 | `./check-articles` |
