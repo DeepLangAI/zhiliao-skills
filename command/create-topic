@@ -105,6 +105,10 @@ if [ "$CONFIRM_MODE" = true ]; then
       "ID: \(.data.topic_id)",
       "描述: \(.data.description)",
       (if .data.surface_url then "封面: \(.data.surface_url)" else empty end)
+    elif (.msg | test("余额不足")) then
+      "❌ \(.msg)",
+      "",
+      "请前往充值页面充值: http://open.zhiliao.news/topic/api_key"
     else
       "❌ 操作失败: \(.msg)"
     end
@@ -205,6 +209,10 @@ if [ "$AUTO_CREATE" = true ]; then
       "ID: \(.data.topic_id)",
       "描述: \(.data.description)",
       (if .data.surface_url then "封面: \(.data.surface_url)" else empty end)
+    elif (.msg | test("余额不足")) then
+      "❌ \(.msg)",
+      "",
+      "请前往充值页面充值: http://open.zhiliao.news/topic/api_key"
     else
       "❌ 创建失败: \(.msg)"
     end
