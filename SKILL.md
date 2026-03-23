@@ -1,6 +1,6 @@
 ---
 name: zhiliao
-description: "知了 - AI 话题追踪与资讯聚合服务。通过自然语言创建追踪话题，自动从全网聚合相关文章并定时更新。适用场景：(1) 创建信息追踪话题（如追踪黄金价格、科技新闻、行业动态），(2) 获取和浏览话题下的聚合文章，(3) 设置定时任务定期抓取新文章，(4) 管理话题列表。触发关键词：zhiliao、知了、话题追踪、资讯聚合、信息监控、追踪话题、创建话题、文章聚合。"
+description: "知了 - AI 话题追踪与资讯聚合服务。通过自然语言创建追踪话题，自动从全网聚合相关文章并定时更新。适用场景：(1) 创建信息追踪话题（如追踪黄金价格、科技新闻、行业动态），(2) 获取和浏览话题下的聚合文章，(3) 设置定时任务定期抓取新文章，(4) 查看/管理话题列表，(5) 取消订阅不需要的话题。触发关键词：zhiliao、知了、话题追踪、资讯聚合、信息监控、追踪话题、创建话题、订阅话题、取消订阅、文章聚合。"
 metadata: {"openclaw":{"emoji":"📰","primaryEnv":"ZHILIAO_API_KEY"}}
 ---
 
@@ -119,7 +119,21 @@ SCOPE=$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | head -c 6)
 
 输出格式：Markdown 表格，包含话题 ID、名称、描述、创建时间、缓存状态。
 
-### 4. 检查所有话题更新
+### 4. 取消订阅话题
+
+当用户不再需要追踪某个话题时，引导用户先通过 `list-topics` 查看话题 ID，再执行取消订阅：
+
+```bash
+# 查看话题列表，获取 TOPIC_ID
+<skill-path>/command/list-topics
+
+# 取消订阅
+<skill-path>/command/unsubscribe-topic TOPIC_ID
+```
+
+取消订阅成功后，命令会自动清理本地话题记录和文章缓存。
+
+### 5. 检查所有话题更新
 
 ```bash
 <skill-path>/command/check-articles
@@ -127,7 +141,7 @@ SCOPE=$(cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | head -c 6)
 
 遍历本地话题列表，对每个话题调用 API 获取最新文章（前 10 篇），汇总展示并更新缓存。
 
-### 5. 定时任务（OpenClaw Cron）
+### 6. 定时任务（OpenClaw Cron）
 
 **每天早上8点日报**：
 ```bash
@@ -175,6 +189,7 @@ openclaw cron remove <jobId>    # 删除任务
 | `create-topic` | 确认创建/关注 | `./create-topic --confirm --session-id ID --action create\|subscribe [--topic-id ID]` |
 | `fetch-articles` | 获取文章 | `./fetch-articles TOPIC_ID [LIMIT] [CURSOR]` |
 | `list-topics` | 查看话题列表 | `./list-topics [TOPIC_ID]` |
+| `unsubscribe-topic` | 取消订阅话题 | `./unsubscribe-topic TOPIC_ID` |
 | `check-articles` | 检查所有话题更新 | `./check-articles` |
 
 所有命令位于 `command/` 目录，已添加执行权限。

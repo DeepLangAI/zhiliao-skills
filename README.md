@@ -92,6 +92,7 @@ echo '{"apiKey":"your-api-key-here"}' > ~/.zhiliao/config.json
 | `create-topic` | 确认创建/关注 | `./create-topic --confirm --session-id ID --action create\|subscribe [--topic-id ID]` |
 | `fetch-articles` | 获取文章 | `./fetch-articles TOPIC_ID [LIMIT] [CURSOR]` |
 | `list-topics` | 查看话题列表 | `./list-topics [TOPIC_ID]` |
+| `unsubscribe-topic` | 取消订阅话题 | `./unsubscribe-topic TOPIC_ID` |
 | `check-articles` | 检查所有话题更新 | `./check-articles` |
 
 示例：
@@ -117,6 +118,9 @@ cd ~/.openclaw/workspace/skills/zhiliao-skills/command
 # 获取文章
 ./fetch-articles 69afe54d037de4f01d67b756
 
+# 取消订阅话题
+./unsubscribe-topic 69afe54d037de4f01d67b756
+
 # 检查所有话题更新
 ./check-articles
 ```
@@ -138,6 +142,7 @@ zhiliao-skills/
     ├── create-topic       # 创建话题（两步式：预览 + 确认）
     ├── fetch-articles     # 获取文章
     ├── list-topics        # 查看话题列表
+    ├── unsubscribe-topic  # 取消订阅话题
     └── check-articles     # 检查所有话题更新
 ```
 

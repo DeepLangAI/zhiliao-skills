@@ -16,8 +16,8 @@ fi
 
 # 加载配置
 ZHILIAO_API_KEY="${ZHILIAO_API_KEY:-$(cat ~/.zhiliao/config.json 2>/dev/null | jq -r '.apiKey // empty')}"
-BASE_URL="${ZHILIAO_BASE_URL:-$(cat ~/.zhiliao/config.json 2>/dev/null | jq -r '.baseUrl // "http://localhost:8091"')}"
-BASE_URL="${BASE_URL:-http://localhost:8091}"
+BASE_URL="${ZHILIAO_BASE_URL:-$(cat ~/.zhiliao/config.json 2>/dev/null | jq -r '.baseUrl // "http://api-public.zhiliao.news"')}"
+BASE_URL="${BASE_URL:-http://api-public.zhiliao.news}"
 
 if [ -z "$ZHILIAO_API_KEY" ]; then
   echo "错误: 未配置 API Key"
