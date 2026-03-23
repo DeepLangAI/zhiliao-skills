@@ -36,8 +36,7 @@ curl -s -X POST "$BASE_URL/api/topic/v1/out/topic/article" \
 cat "$TEMP_RESULT" | jq -r '
   "共 \(.data.article_num) 篇 | 最近1小时新增 \(.data.no_article_last_hour_count) 篇 | 最近1天新增 \(.data.no_article_last_day_count) 篇\n",
   (.data.feed_list[] |
-    "### \(.title)",
-    (if .url then "> 原文: \(.url)" else empty end),
+    "### [\(.title)](https://h5.zhiliao.news/article/\(.entry_id))",
     "> \(.description // "暂无摘要")",
     "> 发布时间: \(.pub_time | strftime("%Y-%m-%d %H:%M"))",
     (if .viewpoint then "\n**核心观点：**", (.viewpoint[] | "- \(.)") else empty end),

@@ -48,7 +48,7 @@ cat "$TOPICS_FILE" | jq -r '.[].topic_id' | while read -r TOPIC_ID; do
   else
     cat "$TEMP_RESULT" | jq -r '
       .data.feed_list[] |
-      "- [\(.title)](\(.url // ""))",
+      "- [\(.title)](https://h5.zhiliao.news/article/\(.entry_id))",
       "  > \(.description // "暂无摘要" | .[0:120])",
       "  > \(.pub_time | strftime("%Y-%m-%d %H:%M"))\n"
     '
