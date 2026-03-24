@@ -13,6 +13,13 @@
 - **无依赖** - 仅使用 curl + jq + iconv（系统自带），无需安装任何额外环境
 - **免费起步** - 每个 API Key 前 3 个话题免费
 
+## 效果预览
+
+| 创建话题 | 话题总览 | 文章详情 |
+|:---:|:---:|:---:|
+| <img src="assets/screenshots/topic-created.jpeg" width="240" alt="话题创建成功"/> | <img src="assets/screenshots/topic-list.jpeg" width="240" alt="话题总览列表"/> | <img src="assets/screenshots/article-detail.jpeg" width="240" alt="最新文章详情"/> |
+| 自然语言创建话题，自动设置定时推送 | 按分类查看所有追踪话题 | 查看话题最新聚合文章 |
+
 ## 安装方法
 
 ### 方法一：直接克隆到工作区（推荐）
@@ -180,3 +187,9 @@ zhiliao-skills/
 - [API Key 申请](https://open.zhiliao.news/)
 - [OpenClaw 文档](https://docs.openclaw.ai)
 - [ClawdHub](https://clawdhub.com)
+
+## 交流社群
+
+扫描下方二维码加入用户群，获取使用帮助和最新动态：
+
+<img src="assets/contact_me_qr.png" width="200" alt="扫码入群" />
